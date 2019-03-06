@@ -1,5 +1,7 @@
 package com.siddu.config;
 
+import javax.sql.DataSource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +12,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 
 /*@Configuration
 @EnableWebSecurity*/
@@ -20,6 +24,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 	@Autowired
 	CustomSuccessHandler customSuccessHandler;
+
+	@Autowired
+	DataSource dataSource;
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -46,8 +53,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 		http.authorizeRequests().antMatchers("/test/**").permitAll().antMatchers("/emp/**")
 				.access("hasRole('EMP') or hasRole('ADMIN')").antMatchers("/admin/**").access("hasRole('ADMIN')").and()
 				.formLogin().loginPage("/login").successHandler(customSuccessHandler).usernameParameter("ssoId")
-				.passwordParameter("password").and().csrf().and().exceptionHandling()
-				.accessDeniedPage("/login?error=true");
+				.passwordParameter("password").and().rememberMe().rememberMeParameter("remember-me")
+				.tokenRepository(persistentTokenRepository()).tokenValiditySeconds(86400).and().csrf().and()
+				.exceptionHandling().accessDeniedPage("/login?error=true");
+	}
 
+	@Bean
+	public PersistentTokenRepository persistentTokenRepository() {
+		JdbcTokenRepositoryImpl tokenRepositoryImpl = new JdbcTokenRepositoryImpl();
+		tokenRepositoryImpl.setDataSource(dataSource);
+		return tokenRepositoryImpl;
 	}
 }
