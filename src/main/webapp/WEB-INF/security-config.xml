@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+                    http://www.springframework.org/schema/beans/spring-beans.xsd
+                    http://www.springframework.org/schema/security
+                     http://www.springframework.org/schema/security/spring-security.xsd">
+
+	<http auto-config="true">
+		<intercept-url pattern="/test/**" access="permitAll" />
+		<intercept-url pattern="/emp/**" access="hasRole('ROLE_EMP')" />
+		<intercept-url pattern="/admin/**" access="hasRole('ROLE_ADMIN')" />
+		<form-login login-page="/login" username-parameter="ssoId"
+			password-parameter="password" authentication-success-handler-ref="customSuccessHandler"
+			authentication-failure-url="/login?error=true" />
+		<csrf />
+
+		<remember-me remember-me-parameter="remember-me"
+			remember-me-cookie="remember-me" token-validity-seconds="86400"
+			data-source-ref="dataSource" />
+
+	</http>
+
+	<authentication-manager>
+		<authentication-provider user-service-ref="customUserDetailsService">
+			<password-encoder ref="bcryptEncoder" />
+		</authentication-provider>
+	</authentication-manager>
+
+	<beans:bean id="customSuccessHandler" class="com.siddu.config.CustomSuccessHandler" />
+	<beans:bean id="customUserDetailsService" class="com.siddu.config.CustomUserDetailsService" />
+	<beans:bean id="bcryptEncoder"
+		class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
+
+
+
+
+</beans:beans>
